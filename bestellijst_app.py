@@ -102,18 +102,21 @@ if uploaded_file is not None:
                 path_str = " → ".join([f"{i} (×{q})" for i, q in path])
                 st.code(path_str)
 
+        # Tabel met lengte-artikelen onder traceerfunctie
+        st.subheader("📏 Lengte-artikelen")
+        length_items = []
+        for item, logs in length_log.items():
+            total_mm = sum(qty for qty, _ in logs)
+            name = df[df['item'] == item]['productname'].dropna().unique()
+            desc = name[0] if len(name) else ''
+            length_items.append({"item": item, "productname": desc, "total_mm": total_mm})
+
+        length_df = pd.DataFrame(length_items)
+        st.dataframe(length_df, use_container_width=True)
+
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             result_df.to_excel(writer, index=False, sheet_name='Bestellijst')
-
-            length_items = []
-            for item, logs in length_log.items():
-                total_mm = sum(qty for qty, _ in logs)
-                name = df[df['item'] == item]['productname'].dropna().unique()
-                desc = name[0] if len(name) else ''
-                length_items.append({"item": item, "productname": desc, "total_mm": total_mm})
-
-            length_df = pd.DataFrame(length_items)
             length_df.to_excel(writer, index=False, sheet_name='Lengte-artikelen')
 
         st.download_button(
